@@ -191,6 +191,55 @@ def _line_aa(Py_ssize_t r0, Py_ssize_t c0, Py_ssize_t r1, Py_ssize_t c1):
             np.array(cc, dtype=np.intp),
             1. - np.array(val, dtype=float))
 
+def _update_mask_with_polygon_coords(r, c, mask):
+    """Generate coordinates of pixels within polygon.
+
+    Parameters
+    ----------
+    r : (N,) ndarray
+        Row coordinates of vertices of polygon.
+    c : (N,) ndarray
+        Column coordinates of vertices of polygon.
+    mask : ndarray of bool
+        Image shape which is used to determine the maximum extent of output
+        pixel coordinates. This is useful for polygons that exceed the image
+        size. If None, the full extent of the polygon is used.
+
+    Returns
+    -------
+    mask: ndarray 
+        the updated mask with the areas inside the polygon now assigned True
+    """
+    r = np.atleast_1d(r)
+    c = np.atleast_1d(c)
+
+    cdef Py_ssize_t nr_verts = c.shape[0]
+    cdef Py_ssize_t minr = int(max(0, r.min()))
+    cdef Py_ssize_t maxr = int(ceil(r.max()))
+    cdef Py_ssize_t minc = int(max(0, c.min()))
+    cdef Py_ssize_t maxc = int(ceil(c.max()))
+
+    # make sure output coordinates do not exceed image size
+    shape = mask.shape
+    if shape is not None:
+        maxr = min(shape[0] - 1, maxr)
+        maxc = min(shape[1] - 1, maxc)
+
+    # make contiguous arrays for r, c coordinates
+    cdef cnp.float64_t[::1] rptr = np.ascontiguousarray(r, 'float64')
+    cdef cnp.float64_t[::1] cptr = np.ascontiguousarray(c, 'float64')
+    cdef cnp.float64_t r_i, c_i
+
+    # output coordinate arrays
+    rr = list()
+    cc = list()
+
+    for r_i in range(minr, maxr+1):
+        for c_i in range(minc, maxc+1):
+            if point_in_polygon(cptr, rptr, c_i, r_i):
+                mask[int(c_i), int(r_i)] = True
+
+    return mask 
 
 def _polygon(r, c, shape):
     """Generate coordinates of pixels within polygon.
