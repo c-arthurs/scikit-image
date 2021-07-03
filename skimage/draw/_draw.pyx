@@ -245,7 +245,7 @@ def _polygon(r, c, shape):
     return np.array(rr, dtype=np.intp), np.array(cc, dtype=np.intp)
 
 
-def _draw_poly_on_array(r, c, image, fill_value=True):
+def _draw_poly_on_array(r, c, image, fill_value):
     """ Fill the area of a polygon on an input image.
 
     Parameters
@@ -256,8 +256,8 @@ def _draw_poly_on_array(r, c, image, fill_value=True):
         Column coordinates of vertices of polygon.
     image : ndarray
         Input image that polygon will be drawn onto.
-    fill_value : bool, int, optional
-        The value that will be assigned to coordinates within the polygon. Default is True. 
+    fill_value : bool, int, tuple, optional
+        The value that will be assigned to coordinates within the polygon. Default is 1. 
 
     Returns
     -------
@@ -275,25 +275,21 @@ def _draw_poly_on_array(r, c, image, fill_value=True):
 
     # make sure output coordinates do not exceed image size
     shape = image.shape
-    if shape is not None:
-        maxr = min(shape[0] - 1, maxr)
-        maxc = min(shape[1] - 1, maxc)
+    maxr = min(shape[0] - 1, maxr)
+    maxc = min(shape[1] - 1, maxc)
 
-    # make contiguous arrays for r, c coordinates
-    cdef cnp.float64_t[::1] rptr = np.ascontiguousarray(r, 'float64')
-    cdef cnp.float64_t[::1] cptr = np.ascontiguousarray(c, 'float64')
-    cdef cnp.float64_t r_i, c_i
-
-    # output coordinate arrays
-    rr = list()
-    cc = list()
+    # make contiguous arrays for r, c coordinates and image - image dtype undefined to allow for any image type
+    cdef cnp.float64_t[::1] rptr = np.ascontiguousarray(r, np.float64)
+    cdef cnp.float64_t[::1] cptr = np.ascontiguousarray(c, np.float64)
+    image_ptr = np.ascontiguousarray(image)
+    cdef Py_ssize_t r_i, c_i
 
     for r_i in range(minr, maxr+1):
         for c_i in range(minc, maxc+1):
-            if point_in_polygon(cptr, rptr, c_i, r_i):
-                image[int(c_i), int(r_i)] = True
+            if point_in_polygon(cptr, rptr, <double>c_i, <double>r_i):
+                image_ptr[c_i, r_i] = fill_value
 
-    return image 
+    return image
 
 
 def _circle_perimeter(Py_ssize_t r_o, Py_ssize_t c_o, Py_ssize_t radius,

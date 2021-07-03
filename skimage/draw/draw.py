@@ -518,7 +518,7 @@ def polygon(r, c, shape=None):
     return _polygon(r, c, shape)
 
 
-def draw_poly_on_array(r, c, image, fill_value=True):
+def draw_poly_on_array(r, c, image, fill_value=1):
     """ Fill the area of a polygon on an input image.
 
     Parameters
@@ -529,8 +529,8 @@ def draw_poly_on_array(r, c, image, fill_value=True):
         Column coordinates of vertices of polygon.
     image : ndarray
         Input image that polygon will be drawn onto.
-    fill_value : bool, int, optional
-        The value that will be assigned to coordinates within the polygon. Default is True.
+    fill_value : bool, int, tuple, optional
+        The value that will be assigned to coordinates within the polygon. Default is 1.
 
     Returns
     -------
