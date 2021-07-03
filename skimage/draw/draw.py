@@ -3,7 +3,7 @@ import numpy as np
 
 from .._shared._geometry import polygon_clip
 from ._draw import (_coords_inside_image, _line, _line_aa,
-        _update_mask_with_polygon_coords, 
+                    _draw_poly_on_array, 
                     _polygon, _ellipse_perimeter,
                     _circle_perimeter, _circle_perimeter_aa,
                     _bezier_curve)
@@ -471,54 +471,6 @@ def line_aa(r0, c0, r1, c1):
     """
     return _line_aa(r0, c0, r1, c1)
 
-def update_mask_with_polygon_coords(r, c, mask):
-
-    """Generate coordinates of pixels within polygon.
-
-    Parameters
-    ----------
-    r : (N,) ndarray
-        Row coordinates of vertices of polygon.
-    c : (N,) ndarray
-        Column coordinates of vertices of polygon.
-    shape : tuple, optional
-        Image shape which is used to determine the maximum extent of output
-        pixel coordinates. This is useful for polygons that exceed the image
-        size. If None, the full extent of the polygon is used.  Must be at
-        least length 2. Only the first two values are used to determine the
-        extent of the input image.
-
-    Returns
-    -------
-    rr, cc : ndarray of int
-        Pixel coordinates of polygon.
-        May be used to directly index into an array, e.g.
-        ``img[rr, cc] = 1``.
-
-    Examples
-    --------
-    >>> from skimage.draw import polygon
-    >>> img = np.zeros((10, 10), dtype=np.uint8)
-    >>> r = np.array([1, 2, 8])
-    >>> c = np.array([1, 7, 4])
-    >>> rr, cc = polygon(r, c)
-    >>> img[rr, cc] = 1
-    >>> img
-    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-           [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
-           [0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-           [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-           [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-           [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-           [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=uint8)
-
-    """
-    return _update_mask_with_polygon_coords(r, c, mask)
-
-
 def polygon(r, c, shape=None):
     """Generate coordinates of pixels within polygon.
 
@@ -564,6 +516,47 @@ def polygon(r, c, shape=None):
 
     """
     return _polygon(r, c, shape)
+
+
+def draw_poly_on_array(r, c, image, fill_value=True):
+    """ Fill the area of a polygon on an input image.
+
+    Parameters
+    ----------
+    r : (N,) ndarray
+        Row coordinates of vertices of polygon.
+    c : (N,) ndarray
+        Column coordinates of vertices of polygon.
+    image : ndarray
+        Input image that polygon will be drawn onto.
+    fill_value : bool, int, optional
+        The value that will be assigned to coordinates within the polygon. Default is True.
+
+    Returns
+    -------
+    image: ndarray 
+        The updated image with the areas inside the polygon now assigned the fill_value.
+
+    Examples
+    --------
+    >>> from skimage.draw import draw_poly_on_array
+    >>> img = np.zeros((10, 10), dtype=np.uint8)
+    >>> r = np.array([1, 2, 8])
+    >>> c = np.array([1, 7, 4])
+    >>> img = draw_poly_on_array(r, c, image, fill_value=1)
+    >>> img
+    array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+           [0, 0, 1, 1, 1, 1, 1, 1, 0, 0],
+           [0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+           [0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+           [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+           [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+           [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]], dtype=uint8)
+    """
+    return _draw_poly_on_array(r, c, image, fill_value)
 
 
 def circle_perimeter(r, c, radius, method='bresenham', shape=None):
